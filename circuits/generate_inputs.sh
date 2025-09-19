@@ -1,14 +1,6 @@
 #!/bin/bash
 
-input_file="inputs.txt"
 output_file="Prover.toml"
-
-# Extract only the value inside quotes for a given key
-extract_value() {
-    local key=$1
-    # Extract the part inside quotes after the equals sign
-    grep "^$key\s*=" "$input_file" | sed -E 's/^[^=]+= *"(.*)"/\1/'
-}
 
 # Convert hex string (without 0x) to quoted decimal byte array
 hex_to_dec_quoted_array() {
@@ -26,19 +18,17 @@ hex_to_dec_quoted_array() {
     echo "["$(IFS=,; echo "${arr[*]}")"]"
 }
 
-# Read values from file
-# expected_address=$(extract_value expected_address)
-hashed_message=$(extract_value hashed_message)
-echo "hashed_message extracted: '$hashed_message'"
-pub_key_x=$(extract_value pub_key_x)
-pub_key_y=$(extract_value pub_key_y)
-signature=$(extract_value signature)
+# Read values from environment variables
+# Make sure the env vars are set: HASHED_MESSAGE, PUB_KEY_X, PUB_KEY_Y, SIGNATURE
+if [ -z "$HASHED_MESSAGE" ] || [ -z "$PUB_KEY_X" ] || [ -z "$PUB_KEY_Y" ] || [ -z "$SIGNATURE" ]; then
+    echo "Please set HASHED_MESSAGE, PUB_KEY_X, PUB_KEY_Y, and SIGNATURE environment variables."
+    exit 1
+fi
 
-# Strip 0x from everything except expected_address
-hashed_message=${hashed_message#0x}
-pub_key_x=${pub_key_x#0x}
-pub_key_y=${pub_key_y#0x}
-signature=${signature#0x}
+hashed_message=${HASHED_MESSAGE#0x}
+pub_key_x=${PUB_KEY_X#0x}
+pub_key_y=${PUB_KEY_Y#0x}
+signature=${SIGNATURE#0x}
 
 # Strip last byte (2 hex chars) from signature to remove v
 signature=${signature:0:${#signature}-2}
